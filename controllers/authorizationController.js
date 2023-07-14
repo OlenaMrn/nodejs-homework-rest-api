@@ -24,7 +24,7 @@ const register = async (request, response, next) => {
     password: hashPassword,
   });
 
-  response.json({
+  response.status(201).json({
     user: {
       email: newUser.email,
       subscription: newUser.subscription,
