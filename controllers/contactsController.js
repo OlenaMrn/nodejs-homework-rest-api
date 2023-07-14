@@ -1,9 +1,20 @@
-const {Contact} = require("../models")
-
+const { contactModel } = require("../models");
 const { HttpError, controllerWrapper } = require("../helpers");
 
+const { Contact } = contactModel;
+
 const getContacts = async (request, response, next) => {
-   const result = await Contact.find({}, "-createdAt -updatedAt");
+  const { _id: owner } = request.user;
+  const { page = 1, limit = 10, favorite } = request.query;
+  const skip = (page - 1) * limit;
+  const query = { owner };
+  if (favorite !== undefined) {
+    query.favorite = favorite;
+  }
+  const result = await Contact.find(query, "-createdAt -updatedAt", {
+    skip,
+    limit,
+  }).populate("owner", "email");
   if (!result) {
     throw HttpError(404, "Not found");
   }
@@ -20,7 +31,8 @@ const getContact = async (request, response, next) => {
 };
 
 const addContact = async (request, response, next) => {
-  const result = await Contact.create(request.body);
+  const { _id: owner } = request.user;
+  const result = await Contact.create({ ...request.body, owner });
   response.status(201).json(result);
 };
 
@@ -35,14 +47,16 @@ const deleteContact = async (request, response, next) => {
 
 const updateContact = async (request, response, next) => {
   const { contactId } = request.params;
-  const result = await Contact.findByIdAndUpdate(contactId, request.body, {new: true});
+  const result = await Contact.findByIdAndUpdate(contactId, request.body, {
+    new: true,
+  });
   if (!result) {
     throw HttpError(404, "Not found");
   }
   response.json(result);
 };
 
-const updateFavorite = async (request, response, next) => {
+const updateStatusContact = async (request, response, next) => {
   const { contactId } = request.params;
   const result = await Contact.findByIdAndUpdate(contactId, request.body, {
     new: true,
@@ -53,14 +67,11 @@ const updateFavorite = async (request, response, next) => {
   response.json(result);
 };
 
-
-
-
 module.exports = {
   getContacts: controllerWrapper(getContacts),
   getContact: controllerWrapper(getContact),
   addContact: controllerWrapper(addContact),
   deleteContact: controllerWrapper(deleteContact),
   updateContact: controllerWrapper(updateContact),
-  updateFavorite: controllerWrapper(updateFavorite),
+  updateStatusContact: controllerWrapper(updateStatusContact),
 };

@@ -19,31 +19,44 @@ const contactSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    owner: {
+      type: Schema.Types.ObjectId,
+      ref: "user",
+      required: true,
+    },
   },
-  { versionKey: false, timestamps: true }
+  { versionKey: false }
 );
 
-const addSchema = Joi.object({
-  name: Joi.string().required(),
-  email: Joi.string().required(),
+contactSchema.post("save", handleMongooseError);
+
+const requiredFieldsSchema = Joi.object({
+  name: Joi.string().required().messages({
+    "any.required": "Missing required name field",
+  }),
+  email: Joi.string().email().required().messages({
+    "any.required": "Missing required email field",
+    "string.email": "Invalid email format",
+  }),
   phone: Joi.string()
     .pattern(/^\(\d{3}\)\s\d{3}-\d{4}$/)
-    .required(),
+    .required()
+    .messages({
+      "string.pattern.base":
+        "Phone number must be in the format (111) 111-1111",
+      "any.required": "Missing required phone field",
+    }),
   favorite: Joi.boolean(),
 });
+
 
 const updateFavoriteSchema = Joi.object({ favorite: Joi.boolean().required() });
 
 const schemas = {
-  addSchema,
+  requiredFieldsSchema,
   updateFavoriteSchema,
 };
 
 const Contact = model("contact", contactSchema);
 
-contactSchema.post("save", handleMongooseError);
-
-module.exports = {
-  Contact,
-  schemas,
-};
+module.exports = { Contact, schemas };
