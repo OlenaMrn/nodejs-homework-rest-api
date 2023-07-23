@@ -11,8 +11,6 @@ dotenv.config();
 
 const { userModel } = require("../models");
 const { HttpError, controllerWrapper, sendEmail } = require("../helpers");
-const { response } = require("express");
-const { verify } = require("crypto");
 
 const { User } = userModel;
 const { SECRET_KEY, BASE_URL } = process.env;
