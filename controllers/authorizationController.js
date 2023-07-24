@@ -30,7 +30,6 @@ const register = async (request, response, next) => {
 
   const verificationToken = nanoid();
 
-  
   const newUser = await User.create({
     ...request.body,
     password: hashPassword,
@@ -40,10 +39,10 @@ const register = async (request, response, next) => {
 
   const verifyEmail = {
     to: email,
-    subject: "Verify email",
-    html: `<a target="_blank" href="${BASE_URL}/users/verify/${verificationToken}" >Click here to verify your email</a>`,
+    subject: "Verify email.",
+    html: `<a target="_blank" href="${BASE_URL}/users/verify/${verificationToken}">Click here to verify your email</a>`,
   };
- await sendEmail(verifyEmail);
+  await sendEmail(verifyEmail);
 
   response.status(201).json({
     user: {
@@ -70,8 +69,8 @@ const verifyEmail = async (request, response, next) => {
   });
 };
 
-const resendVerifyEmail = async (request, response) => {
-  const email = request.body;
+const resendVerifyEmail = async (request, response, next) => {
+  const { email } = request.body;
   const user = await User.findOne({ email });
   if (!user) {
     throw HttpError(404, "Email not found");
@@ -79,6 +78,7 @@ const resendVerifyEmail = async (request, response) => {
   if (user.verify) {
     throw HttpError(400, "Verification has already been passed");
   }
+
   const verifyEmail = {
     to: email,
     subject: "Verify email.",
